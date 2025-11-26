@@ -1,6 +1,6 @@
 import { CSFDCinema, CSFDCinemaPeriod } from './dto/cinema';
 import { CSFDCreator } from './dto/creator';
-import { CSFDMovie } from './dto/movie';
+import { CSFDMovie, CSFDMovieConfig } from './dto/movie';
 import { CSFDSearch } from './dto/search';
 import { CSFDUserRatingConfig, CSFDUserRatings } from './dto/user-ratings';
 import { CinemaScraper } from './services/cinema.service';
@@ -36,9 +36,13 @@ export class Csfd {
     return this.userRatingsService.userRatings(user, config, opts);
   }
 
-  public async movie(movie: number, optionsRequest?: RequestInit): Promise<CSFDMovie> {
+  public async movie(
+    movie: number,
+    config?: CSFDMovieConfig,
+    optionsRequest?: RequestInit
+  ): Promise<CSFDMovie> {
     const opts = optionsRequest ?? this.defaultOptionsRequest;
-    return this.movieService.movie(+movie, opts);
+    return this.movieService.movie(+movie, config, opts);
   }
 
   public async creator(creator: number, optionsRequest?: RequestInit): Promise<CSFDCreator> {
@@ -51,7 +55,11 @@ export class Csfd {
     return this.searchService.search(text, opts);
   }
 
-  public async cinema(district: number | string, period: CSFDCinemaPeriod, optionsRequest?: RequestInit): Promise<CSFDCinema[]> {
+  public async cinema(
+    district: number | string,
+    period: CSFDCinemaPeriod,
+    optionsRequest?: RequestInit
+  ): Promise<CSFDCinema[]> {
     const opts = optionsRequest ?? this.defaultOptionsRequest;
     return this.cinemaService.cinemas(+district, period, opts);
   }

@@ -3,14 +3,39 @@ import { csfd } from './src';
 
 // csfd.setOptions({ optionsRequest: { credentials: 'include' } });
 
-// Parse movie
-csfd.movie(10135).then((movie) => console.log(movie));
+// Test movie trivia - film ID 535121 má více trivia
+const movieId = 535121;
+
+async function testTrivia() {
+  try {
+    console.log('=== Test 1: Standardní načtení (3 trivia z hlavní stránky) ===');
+    const movie1 = await csfd.movie(movieId);
+    console.log(`Počet trivia: ${movie1.trivia?.length || 0}`);
+    console.log('Trivia:', movie1.trivia);
+    console.log('\n');
+
+    console.log('=== Test 2: Všechna trivia ze stránky /zajimavosti/ ===');
+    const movie2 = await csfd.movie(movieId, { allTrivia: true });
+    console.log(`Počet trivia: ${movie2.trivia?.length || 0}`);
+    console.log('První 3 trivia:', movie2.trivia?.slice(0, 3));
+    console.log('\n');
+
+    console.log('=== Test 3: Všechna trivia, ale omezeno na 5 ===');
+    const movie3 = await csfd.movie(movieId, { allTrivia: true, maxTrivia: 5 });
+    console.log(`Počet trivia: ${movie3.trivia?.length || 0}`);
+    console.log('Trivia:', movie3.trivia);
+  } catch (error) {
+    console.error('Chyba:', error);
+  }
+}
+
+testTrivia();
 
 // csfd.search('matrix').then((search) => console.log(search));
 // csfd.cinema(1, 'today').then((cinema) => console.log(cinema));
 
 // Parse creator
-csfd.creator(2120).then((creator) => console.log(creator));
+// csfd.creator(2120).then((creator) => console.log(creator));
 
 /**
  * USER RATINGS
