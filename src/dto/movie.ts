@@ -181,3 +181,18 @@ export interface CSFDPremiere {
 }
 
 export type CSFDBoxContent = 'Související' | 'Podobné';
+
+export interface CSFDMovieConfig {
+  /**
+   * Maximum number of trivia items to return.
+   * If not specified, all available trivia from the main page will be returned (usually 3).
+   * Set to a number to limit the results (e.g., 10 for top 10 trivia).
+   */
+  maxTrivia?: number;
+  /**
+   * Fetch all trivia from the dedicated trivia page.
+   * If true, fetches trivia from /film/{id}/zajimavosti/ instead of the main page.
+   * This allows getting all trivia items, not just the first 3 shown on the main page.
+   */
+  allTrivia?: boolean;
+}

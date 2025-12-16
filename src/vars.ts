@@ -18,6 +18,11 @@ export const getBaseUrl = (): string => BASE_URL;
 export const setBaseUrl = (language: CSFDLanguage): void => {
   BASE_URL = getUrlByLanguage(language);
 };
+export const movieTriviaUrl = (movie: number): string =>
+  `https://www.csfd.cz/film/${encodeURIComponent(movie)}/zajimavosti/`;
+
+export const creatorUrl = (creator: number | string): string =>
+  `https://www.csfd.cz/tvurce/${encodeURIComponent(creator)}`;
 
 export const getUrlByLanguage = (language?: CSFDLanguage): string => {
   if (language && language in LANGUAGE_DOMAIN_MAP) {

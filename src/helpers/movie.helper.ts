@@ -210,10 +210,14 @@ export const getMovieRandomPhoto = (el: HTMLElement | null): string => {
   }
 };
 
-export const getMovieTrivia = (el: HTMLElement | null): string[] => {
+export const getMovieTrivia = (el: HTMLElement | null, maxTrivia?: number): string[] => {
   const triviaNodes = el.querySelectorAll('.article-trivia ul li');
   if (triviaNodes?.length) {
-    return triviaNodes.map((node) => node.textContent.trim().replace(/(\r\n|\n|\r|\t)/gm, ''));
+    const trivia = triviaNodes.map((node) =>
+      node.textContent.trim().replace(/(\r\n|\n|\r|\t)/gm, '')
+    );
+    // Apply limit if specified, otherwise return all
+    return maxTrivia !== undefined && maxTrivia > 0 ? trivia.slice(0, maxTrivia) : trivia;
   } else {
     return null;
   }
@@ -278,7 +282,10 @@ const getBoxContent = (el: HTMLElement, box: string): HTMLElement => {
     ?.parentNode;
 };
 
-export const getMovieBoxMovies = (el: HTMLElement, boxName: CSFDBoxContent): CSFDMovieListItem[] => {
+export const getMovieBoxMovies = (
+  el: HTMLElement,
+  boxName: CSFDBoxContent
+): CSFDMovieListItem[] => {
   const movieListItem: CSFDMovieListItem[] = [];
   const box = getBoxContent(el, boxName);
   const movieTitleNodes = box?.querySelectorAll('.article-header .film-title-name');

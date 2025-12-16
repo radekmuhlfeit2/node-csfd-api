@@ -190,7 +190,7 @@ describe('Get Movie trivia', () => {
     expect(movie).toEqual<string[]>([
       'Celosvětová premiéra proběhla 3. září 2018 na Mezinárodním filmovém festivalu v Benátkách.(BMW12)',
       'Natáčanie filmu prebiehalo v kanadskom meste Vancouver a začalo 17.7.2017.(MikaelSVK)',
-      'Ve filmu zazní píseň „A Better Place For Us“, kterou odehrál jako hudebník režisér S. Craig Zahler.(Rominator)',
+      'Ve filmu zazní píseň „A Better Place For Us“, kterou odehrál jako hudebník režisér S. Craig Zahler.(Rominator)'
     ]);
   });
   test('Movie Blank trivia', () => {
@@ -200,14 +200,26 @@ describe('Get Movie trivia', () => {
   test('Movie Series trivia', () => {
     const movie = getMovieTrivia(seriesNode);
     expect(movie).toEqual<string[]>([
-      "Ernst-Hugo Järegård (Stig Helmer) se právě díky roli v seriálu v Dánsku výrazně zviditelnil a byl dokonce považován za nový sexuální symbol.(TomikZlesa)",
-      "Plánovanú 3. sériu narušila predčasná smrť niektorých hlavných hercov, ale po 25 rokoch predsa len vznikla.(misterz)",
-      "Když nastane stav beztíže, jako hudební podkres hraje Bachovo „Preludium F moll“. Tento hudební motiv, spolu se záběrem na vznášejícího se Pontopidana (Lars Mikkelsen), je jednoznačným odkazem na podobnou scénu se stavem beztíže z filmu Solaris (1972).(Kaleidoskop)",
+      'Ernst-Hugo Järegård (Stig Helmer) se právě díky roli v seriálu v Dánsku výrazně zviditelnil a byl dokonce považován za nový sexuální symbol.(TomikZlesa)',
+      'Plánovanú 3. sériu narušila predčasná smrť niektorých hlavných hercov, ale po 25 rokoch predsa len vznikla.(misterz)',
+      'Když nastane stav beztíže, jako hudební podkres hraje Bachovo „Preludium F moll“. Tento hudební motiv, spolu se záběrem na vznášejícího se Pontopidana (Lars Mikkelsen), je jednoznačným odkazem na podobnou scénu se stavem beztíže z filmu Solaris (1972).(Kaleidoskop)'
     ]);
   });
   test('Movie empty node', () => {
     const movie = getMovieTrivia(emptyHtmlNode);
     expect(movie).toEqual(null);
+  });
+  test('Movie trivia with limit', () => {
+    const movie = getMovieTrivia(movieNode, 2);
+    expect(movie).toEqual<string[]>([
+      'Celosvětová premiéra proběhla 3. září 2018 na Mezinárodním filmovém festivalu v Benátkách.(BMW12)',
+      'Natáčanie filmu prebiehalo v kanadskom meste Vancouver a začalo 17.7.2017.(MikaelSVK)'
+    ]);
+    expect(movie.length).toBe(2);
+  });
+  test('Movie trivia without limit returns all', () => {
+    const movie = getMovieTrivia(movieNode);
+    expect(movie.length).toBe(3);
   });
 });
 
@@ -263,12 +275,12 @@ describe('Get VOD', () => {
     expect(movie).toEqual<CSFDVod[]>([
       {
         title: 'Lepší.TV',
-        url: 'https://www.lepsi.tv/top_tv/serial/kralovstvi-cast-prvni-online?utm_source=csfd&utm_content=csfd',
+        url: 'https://www.lepsi.tv/top_tv/serial/kralovstvi-cast-prvni-online?utm_source=csfd&utm_content=csfd'
       },
       {
         title: 'KVIFF.TV',
         url: 'https://kviff.tv/katalog/kralovstvi-cast-druha-prijd-kralovstvi-tve'
-      },
+      }
     ]);
   });
   test('Get vods rich', () => {

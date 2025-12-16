@@ -1,6 +1,6 @@
 import { CSFDCinema, CSFDCinemaPeriod } from './dto/cinema';
 import { CSFDCreator } from './dto/creator';
-import { CSFDMovie } from './dto/movie';
+import { CSFDMovie, CSFDMovieConfig } from './dto/movie';
 import { CSFDSearch } from './dto/search';
 import { CSFDUserRatingConfig, CSFDUserRatings } from './dto/user-ratings';
 import { CSFDUserReviews, CSFDUserReviewsConfig } from './dto/user-reviews';

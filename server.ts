@@ -188,6 +188,14 @@ app.get(Endpoint.MOVIE, async (req, res) => {
     const movie = await csfd.movie(+req.params.id, {
       language
     });
+    const { maxTrivia, allTrivia } = req.query;
+    const config: { maxTrivia?: number; allTrivia?: boolean } = {
+      allTrivia: true // Default: fetch all trivia
+    };
+    if (maxTrivia) config.maxTrivia = +maxTrivia;
+    // Allow disabling allTrivia by setting it to 'false'
+    if (allTrivia === 'false') config.allTrivia = false;
+    const movie = await csfd.movie(+req.params.id, config);
     res.json(movie);
     logMessage('success', { error: null, message: `${Endpoint.MOVIE}: ${req.params.id}${language ? ` [${language}]` : ''}` }, req);
   } catch (error) {

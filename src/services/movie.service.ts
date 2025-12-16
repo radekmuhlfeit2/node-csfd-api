@@ -1,6 +1,6 @@
 import { HTMLElement, parse } from 'node-html-parser';
 import { CSFDFilmTypes } from '../dto/global';
-import { CSFDMovie } from '../dto/movie';
+import { CSFDMovie, CSFDMovieConfig } from '../dto/movie';
 import { fetchPage } from '../fetchers';
 import {
   getLocalizedCreatorLabel,
@@ -25,10 +25,16 @@ import {
   getMovieYear
 } from '../helpers/movie.helper';
 import { CSFDOptions } from '../types';
-import { movieUrl } from '../vars';
+import { movieTriviaUrl, movieUrl } from '../vars';
 
 export class MovieScraper {
-  public async movie(movieId: number, options?: CSFDOptions): Promise<CSFDMovie> {
+  private film: CSFDMovie;
+
+  public async movie(
+    movieId: number,
+    config?: CSFDMovieConfig,
+    optionsRequest?: CSFDOptions
+  ): Promise<CSFDMovie> {
     const id = Number(movieId);
     if (isNaN(id)) {
       throw new Error('node-csfd-api: movieId must be a valid number');
@@ -42,7 +48,18 @@ export class MovieScraper {
     const asideNode = movieHtml.querySelector('.aside-movie-profile');
     const movieNode = movieHtml.querySelector('.main-movie-profile');
     const jsonLd = movieHtml.querySelector('script[type="application/ld+json"]').innerText;
-    return this.buildMovie(+movieId, movieNode, asideNode, pageClasses, jsonLd, options);
+
+    // If allTrivia is requested, fetch trivia from dedicated page
+    let triviaNode = movieNode;
+    if (config?.allTrivia) {
+      const triviaUrl = movieTriviaUrl(id);
+      const triviaResponse = await fetchPage(triviaUrl, { ...optionsRequest });
+      const triviaHtml = parse(triviaResponse);
+      triviaNode = triviaHtml.querySelector('.main-movie-profile') || movieNode;
+    }
+
+    this.buildMovie(+movieId, movieNode, asideNode, pageClasses, jsonLd, config, triviaNode, options);
+    return this.film;
   }
 
   private buildMovie(
@@ -51,9 +68,13 @@ export class MovieScraper {
     asideEl: HTMLElement,
     pageClasses: string[],
     jsonLd: string,
+    config?: CSFDMovieConfig,
+    triviaEl?: HTMLElement,
     options: CSFDOptions
-  ): CSFDMovie {
-    return {
+  ) {
+    // Use trivia from dedicated page if provided, otherwise use main page
+    const triviaSource = triviaEl || el;
+    this.film = {
       id: movieId,
       title: getMovieTitle(el),
       year: getMovieYear(jsonLd),
@@ -69,7 +90,7 @@ export class MovieScraper {
       titlesOther: getMovieTitlesOther(el),
       poster: getMoviePoster(el),
       photo: getMovieRandomPhoto(el),
-      trivia: getMovieTrivia(el),
+      trivia: getMovieTrivia(triviaSource, config?.maxTrivia),
       creators: {
         directors: getMovieGroup(el, getLocalizedCreatorLabel(options?.language, 'directors')),
         writers: getMovieGroup(el, getLocalizedCreatorLabel(options?.language, 'writers')),
