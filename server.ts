@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { csfd } from './src';
 import { CSFDFilmTypes } from './src/dto/global';
+import { CSFDLanguage } from './src/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -67,6 +68,7 @@ enum Errors {
   CREATOR_FETCH_FAILED = 'CREATOR_FETCH_FAILED',
   SEARCH_FETCH_FAILED = 'SEARCH_FETCH_FAILED',
   USER_RATINGS_FETCH_FAILED = 'USER_RATINGS_FETCH_FAILED',
+  USER_REVIEWS_FETCH_FAILED = 'USER_REVIEWS_FETCH_FAILED',
   CINEMAS_FETCH_FAILED = 'CINEMAS_FETCH_FAILED',
   PAGE_NOT_FOUND = 'PAGE_NOT_FOUND',
   TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS'
@@ -77,6 +79,7 @@ enum Endpoint {
   CREATOR = '/creator/:id',
   SEARCH = '/search/:query',
   USER_RATINGS = '/user-ratings/:id',
+  USER_REVIEWS = '/user-reviews/:id',
   CINEMAS = '/cinemas'
 }
 
@@ -91,12 +94,22 @@ const port = process.env.PORT || 3000;
 // --- Config ---
 const API_KEY_NAME = process.env.API_KEY_NAME || 'x-api-key';
 const API_KEY = process.env.API_KEY;
+const RAW_LANGUAGE = process.env.LANGUAGE;
+const isSupportedLanguage = (value: unknown): value is CSFDLanguage =>
+  value === 'cs' || value === 'en' || value === 'sk';
+
+const BASE_LANGUAGE = isSupportedLanguage(RAW_LANGUAGE) ? RAW_LANGUAGE : undefined;
 
 const API_KEYS_LIST = API_KEY
   ? API_KEY.split(/[,;\s]+/)
-      .map((k) => k.trim())
-      .filter(Boolean)
+    .map((k) => k.trim())
+    .filter(Boolean)
   : [];
+
+// Configure base URL if provided
+if (BASE_LANGUAGE) {
+  csfd.setOptions({ language: BASE_LANGUAGE });
+}
 
 // const limiterMinutes = 15;
 
@@ -158,7 +171,7 @@ app.get('/', (_, res) => {
   });
 });
 
-app.get(['/movie/', '/creator/', '/search/', '/user-ratings/'], (req, res) => {
+app.get(['/movie/', '/creator/', '/search/', '/user-ratings/', '/user-reviews/'], (req, res) => {
   const log: ErrorLog = {
     error: Errors.ID_MISSING,
     message: `ID is missing. Provide ID like this: ${req.url}${req.url.endsWith('/') ? '' : '/'}1234`
@@ -168,7 +181,13 @@ app.get(['/movie/', '/creator/', '/search/', '/user-ratings/'], (req, res) => {
 });
 
 app.get(Endpoint.MOVIE, async (req, res) => {
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
+
   try {
+    const movie = await csfd.movie(+req.params.id, {
+      language
+    });
     const { maxTrivia, allTrivia } = req.query;
     const config: { maxTrivia?: number; allTrivia?: boolean } = {
       allTrivia: true // Default: fetch all trivia
@@ -178,7 +197,7 @@ app.get(Endpoint.MOVIE, async (req, res) => {
     if (allTrivia === 'false') config.allTrivia = false;
     const movie = await csfd.movie(+req.params.id, config);
     res.json(movie);
-    logMessage('success', { error: null, message: `${Endpoint.MOVIE}: ${req.params.id}` }, req);
+    logMessage('success', { error: null, message: `${Endpoint.MOVIE}: ${req.params.id}${language ? ` [${language}]` : ''}` }, req);
   } catch (error) {
     const log: ErrorLog = {
       error: Errors.MOVIE_FETCH_FAILED,
@@ -190,10 +209,14 @@ app.get(Endpoint.MOVIE, async (req, res) => {
 });
 
 app.get(Endpoint.CREATOR, async (req, res) => {
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
   try {
-    const result = await csfd.creator(+req.params.id);
+    const result = await csfd.creator(+req.params.id, {
+      language
+    });
     res.json(result);
-    logMessage('success', { error: null, message: `${Endpoint.CREATOR}: ${req.params.id}` }, req);
+    logMessage('success', { error: null, message: `${Endpoint.CREATOR}: ${req.params.id}${language ? ` [${language}]` : ''}` }, req);
   } catch (error) {
     const log: ErrorLog = {
       error: Errors.CREATOR_FETCH_FAILED,
@@ -205,10 +228,14 @@ app.get(Endpoint.CREATOR, async (req, res) => {
 });
 
 app.get(Endpoint.SEARCH, async (req, res) => {
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
   try {
-    const result = await csfd.search(req.params.query);
+    const result = await csfd.search(req.params.query, {
+      language
+    });
     res.json(result);
-    logMessage('success', { error: null, message: `${Endpoint.SEARCH}: ${req.params.query}` }, req);
+    logMessage('success', { error: null, message: `${Endpoint.SEARCH}: ${req.params.query}${language ? ` [${language}]` : ''}` }, req);
   } catch (error) {
     const log: ErrorLog = {
       error: Errors.SEARCH_FETCH_FAILED,
@@ -220,7 +247,10 @@ app.get(Endpoint.SEARCH, async (req, res) => {
 });
 
 app.get(Endpoint.USER_RATINGS, async (req, res) => {
-  const { allPages, allPagesDelay, excludes, includesOnly } = req.query;
+  const { allPages, allPagesDelay, excludes, includesOnly, page } = req.query;
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
+
   try {
     const result = await csfd.userRatings(req.params.id, {
       allPages: allPages === 'true',
@@ -228,12 +258,15 @@ app.get(Endpoint.USER_RATINGS, async (req, res) => {
       excludes: excludes ? ((excludes as string).split(',') as CSFDFilmTypes[]) : undefined,
       includesOnly: includesOnly
         ? ((includesOnly as string).split(',') as CSFDFilmTypes[])
-        : undefined
+        : undefined,
+      page: page ? +page : undefined
+    }, {
+      language
     });
     res.json(result);
     logMessage(
       'success',
-      { error: null, message: `${Endpoint.USER_RATINGS}: ${req.params.id}` },
+      { error: null, message: `${Endpoint.USER_RATINGS}: ${req.params.id}${language ? ` [${language}]` : ''}` },
       req
     );
   } catch (error) {
@@ -246,10 +279,48 @@ app.get(Endpoint.USER_RATINGS, async (req, res) => {
   }
 });
 
-app.get(Endpoint.CINEMAS, async (req, res) => {
+app.get(Endpoint.USER_REVIEWS, async (req, res) => {
+  const { allPages, allPagesDelay, excludes, includesOnly, page } = req.query;
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
+
   try {
-    const result = await csfd.cinema(1, 'today');
-    logMessage('success', { error: null, message: `${Endpoint.CINEMAS}` }, req);
+    const result = await csfd.userReviews(req.params.id, {
+      allPages: allPages === 'true',
+      allPagesDelay: allPagesDelay ? +allPagesDelay : undefined,
+      excludes: excludes ? ((excludes as string).split(',') as CSFDFilmTypes[]) : undefined,
+      includesOnly: includesOnly
+        ? ((includesOnly as string).split(',') as CSFDFilmTypes[])
+        : undefined,
+      page: page ? +page : undefined
+    }, {
+      language
+    });
+    res.json(result);
+    logMessage(
+      'success',
+      { error: null, message: `${Endpoint.USER_REVIEWS}: ${req.params.id}${language ? ` [${language}]` : ''}` },
+      req
+    );
+  } catch (error) {
+    const log: ErrorLog = {
+      error: Errors.USER_REVIEWS_FETCH_FAILED,
+      message: 'Failed to fetch user-reviews data: ' + error
+    };
+    logMessage('error', log, req);
+    res.status(500).json(log);
+  }
+});
+
+app.get(Endpoint.CINEMAS, async (req, res) => {
+  const rawLanguage = req.query.language;
+  const language = isSupportedLanguage(rawLanguage) ? rawLanguage : undefined;
+
+  try {
+    const result = await csfd.cinema(1, 'today', {
+      language
+    });
+    logMessage('success', { error: null, message: `${Endpoint.CINEMAS}${language ? ` [${language}]` : ''}` }, req);
     res.json(result);
   } catch (error) {
     const log: ErrorLog = {
@@ -273,25 +344,28 @@ app.use((req, res) => {
 // --- Start server ---
 app.listen(port, () => {
   console.log(`
-                  _                  __    _               _ 
+                  _                  __    _               _
                  | |                / _|  | |             (_)
-  _ __   ___   __| | ___    ___ ___| |_ __| |   __ _ _ __  _ 
+  _ __   ___   __| | ___    ___ ___| |_ __| |   __ _ _ __  _
  | '_ \\ / _ \\ / _\` |/ _ \\  / __/ __|  _/ _\` |  / _\` | '_ \\| |
  | | | | (_) | (_| |  __/ | (__\\__ \\ || (_| | | (_| | |_) | |
  |_| |_|\\___/ \\__,_|\\___|  \\___|___/_| \\__,_|  \\__,_| .__/|_|
-                                                    | |      
-                                                    |_|      
+                                                    | |
+                                                    |_|
 `);
   console.log(`node-csfd-api@${packageJson.version}\n`);
   console.log(`Docs: ${packageJson.homepage}`);
   console.log(`Endpoints: ${Object.values(Endpoint).join(', ')}\n`);
 
-  console.log(`API is running on: http://localhost:${port}\n`);
+  console.log(`API is running on: http://localhost:${port}`);
+  if (BASE_LANGUAGE) {
+    console.log(`Base language configured: ${BASE_LANGUAGE}\n`);
+  }
   if (API_KEYS_LIST.length === 0) {
     console.log(
       '\x1b[31m%s\x1b[0m',
       '⚠️ Server is OPEN!\n- Your server will be open to the world and potentially everyone can use it without any restriction.\n- To enable some basic protection, set API_KEY environment variable (single value or comma-separated list) and provide the same value in request header: ' +
-        API_KEY_NAME
+      API_KEY_NAME
     );
   } else {
     console.log(

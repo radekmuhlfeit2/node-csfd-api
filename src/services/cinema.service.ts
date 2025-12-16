@@ -1,6 +1,7 @@
 import { HTMLElement, parse } from 'node-html-parser';
 import { CSFDCinema, CSFDCinemaPeriod } from '../dto/cinema';
 import { fetchPage } from '../fetchers';
+import { CSFDOptions } from '../types';
 import { cinemasUrl } from '../vars';
 import {
   getCinemaCoords,
@@ -11,25 +12,21 @@ import {
 } from './../helpers/cinema.helper';
 
 export class CinemaScraper {
-  private cinema: CSFDCinema[];
-
   public async cinemas(
     district: number = 1,
     period: CSFDCinemaPeriod = 'today',
-    optionsRequest?: RequestInit
+    options?: CSFDOptions
   ): Promise<CSFDCinema[]> {
-    const url = cinemasUrl(district, period);
-    const response = await fetchPage(url, { ...optionsRequest });
-
+    const url = cinemasUrl(district, period, { language: options?.language });
+    const response = await fetchPage(url, { ...options?.request });
     const cinemasHtml = parse(response);
 
-    const contentNode = cinemasHtml.querySelectorAll('#snippet--cinemas section.box');
+    const contentNode = cinemasHtml.querySelectorAll('#snippet--cinemas section[id*="cinema-"]');
 
-    this.buildCinemas(contentNode);
-    return this.cinema;
+    return this.buildCinemas(contentNode);
   }
 
-  private buildCinemas(contentNode: HTMLElement[]) {
+  private buildCinemas(contentNode: HTMLElement[]): CSFDCinema[] {
     const cinemas: CSFDCinema[] = [];
 
     contentNode.forEach((x) => {
@@ -45,6 +42,6 @@ export class CinemaScraper {
       cinemas.push(cinema);
     });
 
-    this.cinema = cinemas;
+    return cinemas;
   }
 }

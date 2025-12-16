@@ -1,10 +1,12 @@
 {
   "name": "node-csfd-api",
-  "version": "3.1.0",
+  "version": "4.1.1",
   "description": "ČSFD API in JavaScript. Amazing NPM library for scrapping csfd.cz :)",
   "author": "BART! <bart@bartweb.cz>",
   "scripts": {
-    "start": "tsc -w",
+    "dev": "tsc -w",
+    "start": "yarn dev",
+    "server": "tsx server",
     "prebuild": "rimraf dist",
     "build": "tsdown --config-loader unconfig && cp README.md dist/ && cp LICENSE dist/",
     "build:server": "npx esbuild ./server.ts --outfile=dist/server.mjs --format=esm --sourcemap && node scripts/server-mod.js",
@@ -37,31 +39,31 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
-    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.1",
-    "@types/express": "^5.0.4",
-    "@types/node": "^24.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.47.0",
-    "@typescript-eslint/parser": "^8.47.0",
-    "@vitest/coverage-istanbul": "^4.0.10",
-    "@vitest/ui": "4.0.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
+    "@vitest/coverage-istanbul": "^4.0.15",
+    "@vitest/ui": "4.0.15",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "express-slow-down": "^3.0.1",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.6",
-    "prettier": "^3.6.2",
-    "rimraf": "^6.1.0",
-    "tsdown": "^0.15.11",
-    "tsx": "^4.20.6",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "rimraf": "^6.1.2",
+    "tsdown": "^0.17.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.15"
   },
   "repository": {
     "url": "git+https://github.com/bartholomej/node-csfd-api.git",
@@ -96,9 +98,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
     },
     "./package.json": "./package.json"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

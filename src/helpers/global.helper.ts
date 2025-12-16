@@ -1,5 +1,5 @@
 import { CSFDColorRating } from '../dto/global';
-import { Colors } from '../dto/user-ratings';
+import { CSFDColors } from '../dto/user-ratings';
 
 export const parseIdFromUrl = (url: string): number => {
   if (url) {
@@ -26,7 +26,7 @@ export const getColor = (cls: string): CSFDColorRating => {
   }
 };
 
-export const parseColor = (quality: Colors): CSFDColorRating => {
+export const parseColor = (quality: CSFDColors): CSFDColorRating => {
   switch (quality) {
     case 'lightgrey':
       return 'unknown';
@@ -68,3 +68,6 @@ export const parseISO8601Duration = (iso: string): number => {
 
   return +duration.minutes;
 };
+
+// Sleep in loop
+export const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));

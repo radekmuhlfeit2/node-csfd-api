@@ -11,7 +11,7 @@ const badId = 999999999999999;
 // User Ratings
 describe('Live: Fetch rating page', () => {
   test('Fetch `912-bart` user and check some movie', async () => {
-    const MOVIE_NAME = 'Návštěvník';
+    const MOVIE_NAME = 'Poslední Viking';
 
     const movies = await csfd.userRatings('912-bart');
     const movieSelected = movies.filter((x) => x.title === MOVIE_NAME)[0];
@@ -27,7 +27,7 @@ describe('Fetch rating page 2', () => {
   test('Fetch `912-bart` user – page 2 and check html', async () => {
     const url = userRatingsUrl(912, 2);
     const html = await fetchPage(url);
-    expect(html).toContain('Můj soused Totoro');
+    expect(html).toContain('Návštěvník');
   });
 });
 
@@ -188,7 +188,7 @@ describe('Live: Search', () => {
 
 // Search
 describe('Live: Cinemas', () => {
-  let cinemas: CSFDCinema[]
+  let cinemas: CSFDCinema[];
   beforeAll(async () => {
     cinemas = await csfd.cinema(1, 'today');
   });
@@ -213,7 +213,7 @@ describe('Live: Cinemas', () => {
   });
 });
 
-// Creator    
+// Creator
 describe('Live: Creator page', () => {
   test('Fetch `2018-jan-werich` creator', async () => {
     const creator = await csfd.creator(2018);
@@ -255,5 +255,17 @@ describe('Movie page 404', () => {
     } catch (e) {
       expect(e).toThrow(Error);
     }
+  });
+});
+
+describe('Fetch with custom headers', () => {
+  test('Should fetch page with custom headers', async () => {
+    const url = userRatingsUrl(912);
+    const html = await fetchPage(url, {
+      headers: {
+        'X-Custom-Header': 'test-value'
+      }
+    });
+    expect(html).toContain('BART!');
   });
 });

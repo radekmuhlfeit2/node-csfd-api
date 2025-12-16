@@ -2,6 +2,7 @@ import { HTMLElement, parse } from 'node-html-parser';
 import { CSFDColorRating, CSFDStars } from '../dto/global';
 import { CSFDUserRatingConfig, CSFDUserRatings } from '../dto/user-ratings';
 import { fetchPage } from '../fetchers';
+import { sleep } from '../helpers/global.helper';
 import {
   getUserRating,
   getUserRatingColorRating,
@@ -10,22 +11,21 @@ import {
   getUserRatingTitle,
   getUserRatingType,
   getUserRatingUrl,
-  getUserRatingYear,
-  sleep
+  getUserRatingYear
 } from '../helpers/user-ratings.helper';
+import { CSFDOptions } from '../types';
 import { userRatingsUrl } from '../vars';
 
 export class UserRatingsScraper {
-  private films: CSFDUserRatings[] = [];
-
   public async userRatings(
     user: string | number,
     config?: CSFDUserRatingConfig,
-    optionsRequest?: RequestInit
+    options?: CSFDOptions
   ): Promise<CSFDUserRatings[]> {
     let allMovies: CSFDUserRatings[] = [];
-    const url = userRatingsUrl(user);
-    const response = await fetchPage(url, { ...optionsRequest });
+    const pageToFetch = config?.page || 1;
+    const url = userRatingsUrl(user, pageToFetch > 1 ? pageToFetch : undefined, { language: options?.language });
+    const response = await fetchPage(url, { ...options?.request });
     const items = parse(response);
     const movies = items.querySelectorAll('.box-user-rating .table-container tbody tr');
 
@@ -40,12 +40,12 @@ export class UserRatingsScraper {
       console.log('Fetching all pages', pages);
       for (let i = 2; i <= pages; i++) {
         console.log('Fetching page', i, 'out of', pages, '...');
-        const url = userRatingsUrl(user, i);
-        const response = await fetchPage(url, { ...optionsRequest });
+        const url = userRatingsUrl(user, i, { language: options?.language });
+        const response = await fetchPage(url, { ...options?.request });
 
         const items = parse(response);
         const movies = items.querySelectorAll('.box-user-rating .table-container tbody tr');
-        allMovies = [...this.getPage(config, movies)];
+        allMovies = [...allMovies, ...this.getPage(config, movies)];
 
         // Sleep
         if (config.allPagesDelay) {
@@ -59,6 +59,7 @@ export class UserRatingsScraper {
   }
 
   private getPage(config: CSFDUserRatingConfig, movies: HTMLElement[]) {
+    const films: CSFDUserRatings[] = [];
     if (config) {
       if (config.includesOnly?.length && config.excludes?.length) {
         console.warn(
@@ -76,23 +77,23 @@ export class UserRatingsScraper {
       // Filtering includesOnly
       if (config?.includesOnly?.length) {
         if (config.includesOnly.some((include) => type === include)) {
-          this.buildUserRatings(el);
+          films.push(this.buildUserRatings(el));
         }
-        // Filter exludes
+        // Filter excludes
       } else if (config?.excludes?.length) {
         if (!config.excludes.some((exclude) => type === exclude)) {
-          this.buildUserRatings(el);
+          films.push(this.buildUserRatings(el));
         }
       } else {
         // Without filtering
-        this.buildUserRatings(el);
+        films.push(this.buildUserRatings(el));
       }
     }
-    return this.films;
+    return films;
   }
 
-  private buildUserRatings(el: HTMLElement) {
-    this.films.push({
+  private buildUserRatings(el: HTMLElement): CSFDUserRatings {
+    return {
       id: getUserRatingId(el),
       title: getUserRatingTitle(el),
       year: getUserRatingYear(el),
@@ -101,6 +102,6 @@ export class UserRatingsScraper {
       colorRating: getUserRatingColorRating(el) as CSFDColorRating,
       userDate: getUserRatingDate(el),
       userRating: getUserRating(el) as CSFDStars
-    });
+    };
   }
 }

@@ -1,7 +1,7 @@
 import { HTMLElement } from 'node-html-parser';
 import { CSFDColorRating, CSFDFilmTypes, CSFDStars } from '../dto/global';
-import { Colors } from '../dto/user-ratings';
-import { parseIdFromUrl } from './global.helper';
+import { CSFDColors } from '../dto/user-ratings';
+import { parseColor, parseIdFromUrl } from './global.helper';
 
 export const getUserRatingId = (el: HTMLElement): number => {
   const url = el.querySelector('td.name .film-title-name').attributes.href;
@@ -30,7 +30,7 @@ export const getUserRatingYear = (el: HTMLElement): number => {
 };
 
 export const getUserRatingColorRating = (el: HTMLElement): CSFDColorRating => {
-  const color = parseColor(el.querySelector('td.name .icon').classNames.split(' ').pop() as Colors);
+  const color = parseColor(el.querySelector('td.name .icon').classNames.split(' ').pop() as CSFDColors);
   return color;
 };
 
@@ -42,21 +42,3 @@ export const getUserRatingUrl = (el: HTMLElement): string => {
   const url = el.querySelector('td.name .film-title-name').attributes.href;
   return `https://www.csfd.cz${url}`;
 };
-
-const parseColor = (quality: Colors): CSFDColorRating => {
-  switch (quality) {
-    case 'lightgrey':
-      return 'unknown';
-    case 'red':
-      return 'good';
-    case 'blue':
-      return 'average';
-    case 'grey':
-      return 'bad';
-    default:
-      return 'unknown';
-  }
-};
-
-// Sleep in loop
-export const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));

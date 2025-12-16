@@ -1,21 +1,56 @@
 import { CSFDCinemaPeriod } from './dto/cinema';
+import { CSFDLanguage } from './types';
 
-export const userRatingsUrl = (user: string | number, page?: number): string =>
-  `https://www.csfd.cz/uzivatel/${encodeURIComponent(user)}/hodnoceni/${page ? '?page=' + page : ''
-  }`;
+type Options = {
+  language?: CSFDLanguage;
+};
 
-export const movieUrl = (movie: number): string =>
-  `https://www.csfd.cz/film/${encodeURIComponent(movie)}/prehled/`;
+// Language to domain mapping
+const LANGUAGE_DOMAIN_MAP: Record<CSFDLanguage, string> = {
+  cs: 'https://www.csfd.cz',
+  en: 'https://www.csfd.cz/en',
+  sk: 'https://www.csfd.cz/sk',
+};
 
+let BASE_URL = LANGUAGE_DOMAIN_MAP.cs;
+
+export const getBaseUrl = (): string => BASE_URL;
+export const setBaseUrl = (language: CSFDLanguage): void => {
+  BASE_URL = getUrlByLanguage(language);
+};
 export const movieTriviaUrl = (movie: number): string =>
   `https://www.csfd.cz/film/${encodeURIComponent(movie)}/zajimavosti/`;
 
 export const creatorUrl = (creator: number | string): string =>
   `https://www.csfd.cz/tvurce/${encodeURIComponent(creator)}`;
 
-export const cinemasUrl = (district: number | string, period: CSFDCinemaPeriod): string => {
-  return `https://www.csfd.cz/kino/?period=${period}&district=${district}`;
+export const getUrlByLanguage = (language?: CSFDLanguage): string => {
+  if (language && language in LANGUAGE_DOMAIN_MAP) {
+    return LANGUAGE_DOMAIN_MAP[language];
+  }
+  return BASE_URL;
 };
 
-export const searchUrl = (text: string): string =>
-  `https://www.csfd.cz/hledat/?q=${encodeURIComponent(text)}`;
+// User URLs
+export const userUrl = (user: string | number, options: Options): string =>
+  `${getUrlByLanguage(options?.language)}/uzivatel/${encodeURIComponent(user)}`;
+
+export const userRatingsUrl = (user: string | number, page?: number, options: Options = {}): string =>
+  `${userUrl(user, options)}/hodnoceni/${page ? '?page=' + page : ''}`;
+export const userReviewsUrl = (user: string | number, page?: number, options: Options = {}): string =>
+  `${userUrl(user, options)}/recenze/${page ? '?page=' + page : ''}`;
+
+// Movie URLs
+export const movieUrl = (movie: number, options: Options): string =>
+  `${getUrlByLanguage(options?.language)}/film/${encodeURIComponent(movie)}/prehled/`;
+// Creator URLs
+export const creatorUrl = (creator: number | string, options: Options): string =>
+  `${getUrlByLanguage(options?.language)}/tvurce/${encodeURIComponent(creator)}`;
+
+// Cinema URLs
+export const cinemasUrl = (district: number | string, period: CSFDCinemaPeriod, options: Options): string =>
+  `${getUrlByLanguage(options?.language)}/kino/?period=${period}&district=${district}`;
+
+// Search URLs
+export const searchUrl = (text: string, options: Options): string =>
+  `${getUrlByLanguage(options?.language)}/hledat/?q=${encodeURIComponent(text)}`;
