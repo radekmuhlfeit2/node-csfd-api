@@ -19,16 +19,22 @@ export const getMovieId = (el: HTMLElement): number => {
 };
 
 export const getMovieTitle = (el: HTMLElement): string => {
-  return el.querySelector('h1').innerText.split(`(`)[0].trim();
+  const h1 = el.querySelector('h1');
+  if (!h1) return '';
+  return h1.innerText.split(`(`)[0].trim();
 };
 
 export const getMovieGenres = (el: HTMLElement): CSFDGenres[] => {
-  const genresRaw = el.querySelector('.genres').textContent;
+  const genresEl = el.querySelector('.genres');
+  if (!genresEl) return [];
+  const genresRaw = genresEl.textContent;
   return genresRaw.split(' / ') as CSFDGenres[];
 };
 
 export const getMovieOrigins = (el: HTMLElement): string[] => {
-  const originsRaw = el.querySelector('.origin').textContent;
+  const originEl = el.querySelector('.origin');
+  if (!originEl) return [];
+  const originsRaw = originEl.textContent;
   const origins = originsRaw.split(',')[0];
   return origins.split(' / ');
 };
@@ -38,7 +44,9 @@ export const getMovieColorRating = (bodyClasses: string[]): CSFDColorRating => {
 };
 
 export const getMovieRating = (el: HTMLElement): number => {
-  const ratingRaw = el.querySelector('.film-rating-average').textContent;
+  const ratingEl = el.querySelector('.film-rating-average');
+  if (!ratingEl) return null;
+  const ratingRaw = ratingEl.textContent;
   const rating = ratingRaw?.replace(/%/g, '').trim();
   const ratingInt = parseInt(rating);
 
@@ -76,7 +84,9 @@ export const getMovieDuration = (jsonLdRaw: string, el: HTMLElement): number => 
     duration = jsonLd.duration;
     return parseISO8601Duration(duration);
   } catch (error) {
-    const origin = el.querySelector('.origin').innerText;
+    const originEl = el.querySelector('.origin');
+    if (!originEl) return null;
+    const origin = originEl.innerText;
     const timeString = origin.split(',');
     if (timeString.length > 2) {
       // Get last time elelment
@@ -103,8 +113,9 @@ export const getMovieTitlesOther = (el: HTMLElement): CSFDTitlesOther[] => {
   }
 
   const titlesOther = namesNode.map((el) => {
-    const country = el.querySelector('img.flag').attributes.alt;
-    const title = el.textContent.trim().split('\n')[0];
+    const flagImg = el.querySelector('img.flag');
+    const country = flagImg?.attributes.alt;
+    const title = el.textContent?.trim().split('\n')[0];
 
     if (country && title) {
       return {
@@ -214,8 +225,10 @@ export const getMovieVods = (el: HTMLElement | null): CSFDVod[] => {
 // Get box content
 const getBoxContent = (el: HTMLElement, box: string): HTMLElement => {
   const headers = el.querySelectorAll('section.box .box-header');
-  return headers.find((header) => header.querySelector('h3').textContent.trim().includes(box))
-    ?.parentNode;
+  return headers.find((header) => {
+    const h3 = header.querySelector('h3');
+    return h3 && h3.textContent.trim().includes(box);
+  })?.parentNode;
 };
 
 export const getMovieBoxMovies = (
@@ -241,14 +254,16 @@ export const getMoviePremieres = (el: HTMLElement): CSFDPremiere[] => {
   const premiereNodes = el.querySelectorAll('.box-premieres li');
   const premiere: CSFDPremiere[] = [];
   for (const premiereNode of premiereNodes) {
-    const title = premiereNode.querySelector('p + span').attributes.title;
+    const spanEl = premiereNode.querySelector('p + span');
+    const title = spanEl?.attributes.title;
 
     if (title) {
       const [date, ...company] = title?.split(' ');
+      const pEl = premiereNode.querySelector('p');
 
       premiere.push({
         country: premiereNode.querySelector('.flag')?.attributes.title || null,
-        format: premiereNode.querySelector('p').textContent.trim()?.split(' od')[0],
+        format: pEl?.textContent.trim()?.split(' od')[0] || null,
         date,
         company: company.join(' ')
       });

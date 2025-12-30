@@ -42,10 +42,21 @@ export class MovieScraper {
 
     const movieHtml = parse(response);
 
-    const pageClasses = movieHtml.querySelector('.page-content').classNames.split(' ');
+    const pageContent = movieHtml.querySelector('.page-content');
+    if (!pageContent) {
+      throw new Error(`node-csfd-api: Movie page structure not found for ID ${id}`);
+    }
+
+    const pageClasses = pageContent.classNames.split(' ');
     const asideNode = movieHtml.querySelector('.aside-movie-profile');
     const movieNode = movieHtml.querySelector('.main-movie-profile');
-    const jsonLd = movieHtml.querySelector('script[type="application/ld+json"]').innerText;
+
+    if (!movieNode) {
+      throw new Error(`node-csfd-api: Movie content not found for ID ${id}`);
+    }
+
+    const jsonLdScript = movieHtml.querySelector('script[type="application/ld+json"]');
+    const jsonLd = jsonLdScript?.innerText || '{}';
 
     // If allTrivia is requested, fetch trivia from dedicated page
     let triviaNode = movieNode;
